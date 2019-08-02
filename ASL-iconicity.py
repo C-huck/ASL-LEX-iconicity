@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.utils import shuffle
 from scipy.stats import binom_test
+from sklearn.preprocessing import KBinsDiscretizer
 
 def calculate_vif_(X, thresh=5.0):
     variables = list(range(X.shape[1]))
@@ -34,9 +35,17 @@ def calculate_vif_(X, thresh=5.0):
 fileName = "asl-lex-all-cats.csv"
 df = pd.read_csv(fileName)
 
+#discretize sign length
+sl_to_bin = np.array(df['SignLength(ms)']).reshape(-1,1)
+sl_bin = KBinsDiscretizer(n_bins=3, encode='onehot-dense', strategy='quantile').fit_transform(sl_to_bin)
+df_SL = pd.DataFrame(data=sl_bin,columns=['SL_long','SL_med','SL_short'])
+
 #Isolate visual features and dummy-code them
 visual_cats = ['SignType','MajorLocation','Movement','SelectedFingers','Flexion']
 df = pd.get_dummies(df[visual_cats]).join(df['LexicalClass'])
+
+#merge DFs
+df = pd.concat([df,df_SL],axis=1)
 
 #shuffle data and eliminate features with VIF > 5.0
 df_shuf = shuffle(df)
