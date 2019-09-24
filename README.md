@@ -26,7 +26,7 @@ Script isolates visual features from the ASL-LEX corpus and correlates them with
 - Quart:   [0.5536, 0.6212, 0.6793]
 - Max:     0.7273
 
-- 7-class analysis:
+7-class analysis:
 - Mean:    0.2835 (p < 0.001, chance = 1/7; p = 1, blind baseline = 0.60)
 - Std:     0.1403
 - Min:     0.0328
