@@ -8,8 +8,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.model_selection import KFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
-from sklearn.utils import shuffle
-from scipy.stats import binom_test
+from scipy.stats import binom_test,binom
 from sklearn.preprocessing import KBinsDiscretizer
 
 def calculate_vif_(X, thresh=5.0):
@@ -62,7 +61,20 @@ def calculate_p(hits,total,classes):
         print("Total: ",round(binom_test(sum(hits),total,p=p),4))
     else:
         print(round(binom_test(hits,total,p=p),4))
+        
+def binomial_cmf(k, n, p):
+    c = 0
+    for k1 in range(n+1):
+        if k1>=k:
+            c += binom.pmf(k1, n, p)
+    return c
 
+def summary_stats(accuracy):
+    print("Mean:\t",round(np.mean(accuracy),4))
+    print("Std:\t",round(np.std(accuracy),4))
+    print("Min:\t",round(min(accuracy),4))
+    print("Quart:\t",[round(x,4) for x in np.quantile(accuracy,[0.25,0.5,0.75])])
+    print("Max:\t",round(max(accuracy),4))
 
 #read in data
 fileIn = "asl-lex-all-cats.csv"
@@ -86,9 +98,6 @@ df = pd.concat([df,df_SL],axis=1)
 #4-category or noun-vs.-verb analysis
 df = df[df['LexicalClass'].isin(['Noun','Verb'])] #uncomment to run noun-vs.-verb analysis
 
-#shuffle data 
-#df_shuf = shuffle(df)
-
 #As a backup, eliminate features with VIF > 5.0
 X = calculate_vif_(df_shuf.drop(['LexicalClass'],axis=1))
 y = df_shuf['LexicalClass']
@@ -97,3 +106,8 @@ X,y = np.array(X),np.array(y)
 #Begin classification
 accu,accu_raw,classes= LogRegCL(X,y)
 calculate_p(accu_raw,len(X),len(classes))
+summary_stats(accu)
+
+most_freq_class = df['LexicalClass'].value_counts().max()
+p = most_freq_class/len(df)
+binomial_cmf(sum(accu_raw),len(df),p=p)
