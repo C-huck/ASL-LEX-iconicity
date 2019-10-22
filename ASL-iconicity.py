@@ -5,13 +5,17 @@ Script loads ASL-LEX data, dummy-codes them, and enters them in a logistic regre
 import pandas as pd
 import numpy as np
 from statsmodels.stats.outliers_influence import variance_inflation_factor
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from scipy.stats import binom_test,binom
 from sklearn.preprocessing import KBinsDiscretizer
 
 def calculate_vif_(X, thresh=5.0):
+    """
+    Calculates the variance inflation factor (VIFs) for each predictor in a linear model, 
+    and removes features with VIF scores > threshold (default = 5.0). 
+    """
     variables = list(range(X.shape[1]))
     dropped = True
     while dropped:
@@ -32,13 +36,13 @@ def calculate_vif_(X, thresh=5.0):
 
 def LogRegCL(X,y):
     splits = 8
-    kf = KFold(n_splits=splits,shuffle=True)
+    kf = StratifiedKFold(n_splits=splits,shuffle=True)
 
     #NB: class_weight = 'balanced' accounts for the unequal number of each class
     predictions = []
     ground_truth = []
     for train, test in kf.split(X):
-        clf = LogisticRegression(random_state=0, solver='lbfgs',multi_class='multinomial',class_weight='balanced').fit(X[train], y[train])
+        clf = LogisticRegression(random_state=0, solver='lbfgs',multi_class='auto',class_weight='balanced',C=1.0).fit(X[train], y[train])
         pred = clf.predict(X[test])
         predictions.append(pred)
         ground_truth.append(y[test])
@@ -95,12 +99,13 @@ df = pd.get_dummies(df[visual_cats],drop_first=True).join(df['LexicalClass'])
 #merge categorical and discretized dataframes
 df = pd.concat([df,df_SL],axis=1)
 
-#4-category or noun-vs.-verb analysis
-df = df[df['LexicalClass'].isin(['Noun','Verb'])] #uncomment to run noun-vs.-verb analysis
+#7-category or noun-vs.-verb analysis
+#df = df[df['LexicalClass'].isin(['Noun','Verb'])] #uncomment to run noun-vs.-verb analysis
 
 #As a backup, eliminate features with VIF > 5.0
-X = calculate_vif_(df_shuf.drop(['LexicalClass'],axis=1))
-y = df_shuf['LexicalClass']
+X = calculate_vif_(df.drop(['LexicalClass'],axis=1)) #comment to not calculate vif
+#X = df.drop(['LexicalClass'],axis=1) #uncomment to calculate vif
+y = df['LexicalClass']
 X,y = np.array(X),np.array(y)
 
 #Begin classification
