@@ -105,9 +105,13 @@ y = df['LexicalClass']
 X,y = np.array(X),np.array(y)
 
 #Fill in missing/ NaN values with column mean
-#Then standardize by removing the mean and scaling to unit variance
 imp = SimpleImputer(missing_values=np.nan, strategy='mean')
 X = imp.fit_transform(X)
+
+#Standardize by removing the mean and scaling to unit variance
+# NB: scaling at this stage will artificially increase classifier performance, 
+# as information from the entire dataset becomes available when scaling
+# TO-DO: perform scaling after training and testing sets are established
 X = StandardScaler().fit_transform(X)
 
 #Begin classification
