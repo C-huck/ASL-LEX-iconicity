@@ -85,7 +85,7 @@ def summary_stats(accuracy):
     print("Max:\t",round(max(accuracy),4))
     
 #read in data
-fileIn = "asl-lex-all-cats.csv"
+fileIn = "SignData.csv"
 df = pd.read_csv(fileIn)
 
 #Isolate lexical features and dummy-code them
